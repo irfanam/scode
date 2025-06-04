@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Secret Coded Language Tool</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f2f2f2;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      margin-bottom: 10px;
+      padding: 10px;
+    }
+    button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    h2 {
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🔐 Secret Coded Language Tool</h2>
+
+  <label for="inputText">Enter your message:</label><br>
+  <textarea id="inputText" placeholder="Type something..."></textarea>
+
+  <button onclick="encodeText()">Encode</button>
+  <button onclick="decodeText()">Decode</button>
+
+  <h3>Output:</h3>
+  <textarea id="outputText" readonly></textarea>
+
+  <script>
+    function shiftForward(char) {
+      let code = char.toUpperCase().charCodeAt(0);
+      return String.fromCharCode(((code - 65 + 1) % 26) + 65);
+    }
+
+    function shiftBackward(char) {
+      let code = char.toUpperCase().charCodeAt(0);
+      return String.fromCharCode(((code - 65 - 1 + 26) % 26) + 65);
+    }
+
+    function encodeText() {
+      const input = document.getElementById('inputText').value;
+      let encoded = '';
+
+      for (let i = 0; i < input.length; i++) {
+        const c = input[i];
+        if (c.match(/[a-zA-Z0-9]/)) {
+          let word = '';
+          while (i < input.length && input[i].match(/[a-zA-Z0-9]/)) {
+            word += input[i];
+            i++;
+          }
+          i--; // step back
+          let reversed = word.toUpperCase().split('').reverse().join('');
+          let shifted = '';
+          for (let ch of reversed) {
+            shifted += shiftForward(ch);
+          }
+          let withRandom = '';
+          for (let ch of shifted) {
+            const r1 = String.fromCharCode(97 + Math.floor(Math.random() * 26));
+            const r2 = String.fromCharCode(97 + Math.floor(Math.random() * 26));
+            withRandom += ch + r1 + r2;
+          }
+          encoded += withRandom;
+        } else if (c === ' ') {
+          encoded += '#@$';
+        } else if (c === ',') {
+          encoded += '^&*';
+        } else if (c === '.') {
+          encoded += '%~!';
+        }
+      }
+
+      document.getElementById('outputText').value = encoded;
+    }
+
+    function decodeText() {
+      let encoded = document.getElementById('inputText').value;
+
+      encoded = encoded.replace(/#@\$/g, ' SPACE ')
+                       .replace(/\^&\*/g, ' COMMA ')
+                       .replace(/%~!/g, ' PERIOD ');
+
+      const words = encoded.trim().split(/\s+/);
+      let decoded = '';
+
+      for (let word of words) {
+        if (word === 'SPACE') {
+          decoded += ' ';
+        } else if (word === 'COMMA') {
+          decoded += ',';
+        } else if (word === 'PERIOD') {
+          decoded += '.';
+        } else {
+          let letters = '';
+          for (let i = 0; i < word.length; i += 3) {
+            letters += word[i];
+          }
+          let shifted = '';
+          for (let ch of letters) {
+            shifted += shiftBackward(ch);
+          }
+          decoded += shifted.split('').reverse().join('').toLowerCase();
+        }
+      }
+
+      document.getElementById('outputText').value = decoded;
+    }
+  </script>
+
+</body>
+</html>
