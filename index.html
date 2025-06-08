@@ -1,148 +1,138 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html>
 <head>
-  <title>Secret Coded Language Tool</title>
+  <title>🔐 Secret Encoder with Key & Obfuscation</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      background-color: #1e1e2f;
+      color: #fff;
+      font-family: monospace;
       padding: 20px;
-      background: #f0f0f0;
     }
-    textarea {
+    textarea, input {
       width: 100%;
-      height: 100px;
-      margin-bottom: 10px;
       padding: 10px;
-      font-size: 16px;
+      margin: 5px 0;
+      background: #333;
+      color: #0f0;
+      border: none;
+      font-size: 14px;
     }
     button {
-      margin: 5px;
       padding: 10px 20px;
-      font-size: 16px;
+      margin: 5px;
+      background: #444;
+      color: #0f0;
+      border: none;
+      cursor: pointer;
     }
-    h2 {
-      color: #333;
+    button:hover {
+      background: #666;
     }
   </style>
 </head>
-<body>
+<body><h2>🕵️‍♂️ Secret Encoder/Decoder Tool</h2>
+<input id="secretKey" type="text" placeholder="Enter your secret key (required)">
+<textarea id="inputText" placeholder="Type your message..."></textarea>
+<button onclick="encodeText()">Encode</button>
+<button onclick="decodeText()">Decode</button>
+<h3>Output</h3>
+<textarea id="outputText" readonly></textarea><script>
+  const spaceSymbols = ["#@$", "!_!", "@@@", "&%_", "$^$"];
+  const commaSymbols = ["^&*", "$#$", "*-*", "&_@", "%+%"];
+  const periodSymbols = ["%~!", "###", "+=+", "+!+", "!-!"];
+  const questionSymbols = ["???", "??!", ":/?", "?!?", "?= ?"];
+  const fakeGarbageChars = ['~', '`', '|', '=', '[', ']'];
 
-  <h2>🔐 Secret Coded Language Tool</h2>
+  function hashKey(key) {
+    let sum = 0;
+    for (let i = 0; i < key.length; i++) sum += key.charCodeAt(i);
+    return sum;
+  }
 
-  <label for="inputText">Enter your message:</label><br>
-  <textarea id="inputText" placeholder="Type something..."></textarea>
+  function shiftChar(c, key) {
+    return String.fromCharCode(((c.charCodeAt(0) - 65 + key) % 26) + 65);
+  }
 
-  <button onclick="encodeText()">Encode</button>
-  <button onclick="decodeText()">Decode</button>
+  function unshiftChar(c, key) {
+    return String.fromCharCode(((c.charCodeAt(0) - 65 - key + 26) % 26) + 65);
+  }
 
-  <h3>Output:</h3>
-  <textarea id="outputText" readonly></textarea>
+  function insertNoise(ch) {
+    const r1 = String.fromCharCode(97 + Math.floor(Math.random() * 26));
+    const r2 = fakeGarbageChars[Math.floor(Math.random() * fakeGarbageChars.length)];
+    return ch + r1 + r2;
+  }
 
-  <script>
-    const spaceSymbols = ["#@$", "!_!", "@@@", "&%_", "$^$"];
-    const commaSymbols = ["^&*", "$#$", "*-*", "&_@", "%+%"];
-    const periodSymbols = ["%~!", "###", "+=+", "+!+", "!-!"];
-    const questionSymbols = ["???", "??!", ":/?", "?!?", "?=?"];
+  function encodeText() {
+    const input = document.getElementById('inputText').value;
+    const key = document.getElementById('secretKey').value.trim();
+    if (!key) return alert("Please enter your secret key.");
 
-    function getRandom(arr) {
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
+    const shift = hashKey(key) % 26;
+    let output = '';
 
-    function shiftForward(char) {
-      let code = char.toUpperCase().charCodeAt(0);
-      return String.fromCharCode(((code - 65 + 1) % 26) + 65);
-    }
-
-    function shiftBackward(char) {
-      let code = char.toUpperCase().charCodeAt(0);
-      return String.fromCharCode(((code - 65 - 1 + 26) % 26) + 65);
-    }
-
-    function encodeText() {
-      const input = document.getElementById('inputText').value;
-      let encoded = '';
-
-      for (let i = 0; i < input.length; i++) {
-        const c = input[i];
-        if (c.match(/[a-zA-Z0-9]/)) {
-          let word = '';
-          while (i < input.length && input[i].match(/[a-zA-Z0-9]/)) {
-            word += input[i];
-            i++;
-          }
-          i--;
-          let reversed = word.toUpperCase().split('').reverse().join('');
-          let shifted = '';
-          for (let ch of reversed) {
-            shifted += shiftForward(ch);
-          }
-          let withRandom = '';
-          for (let ch of shifted) {
-            const r1 = String.fromCharCode(97 + Math.floor(Math.random() * 26));
-            const r2 = String.fromCharCode(97 + Math.floor(Math.random() * 26));
-            withRandom += ch + r1 + r2;
-          }
-          encoded += withRandom;
-        } else if (c === ' ') {
-          encoded += getRandom(spaceSymbols);
-        } else if (c === ',') {
-          encoded += getRandom(commaSymbols);
-        } else if (c === '.') {
-          encoded += getRandom(periodSymbols);
-        } else if (c === '?') {
-          encoded += getRandom(questionSymbols);
+    for (let i = 0; i < input.length; i++) {
+      const c = input[i];
+      if (c.match(/[a-zA-Z0-9]/)) {
+        let word = '';
+        while (i < input.length && input[i].match(/[a-zA-Z0-9]/)) {
+          word += input[i];
+          i++;
         }
+        i--;
+        let encoded = word.toUpperCase().split('').reverse().map(ch => shiftChar(ch, shift)).map(insertNoise).join('');
+        output += encoded;
+      } else if (c === ' ') {
+        output += spaceSymbols[Math.floor(Math.random() * spaceSymbols.length)];
+      } else if (c === ',') {
+        output += commaSymbols[Math.floor(Math.random() * commaSymbols.length)];
+      } else if (c === '.') {
+        output += periodSymbols[Math.floor(Math.random() * periodSymbols.length)];
+      } else if (c === '?') {
+        output += questionSymbols[Math.floor(Math.random() * questionSymbols.length)];
       }
-
-      document.getElementById('outputText').value = encoded;
     }
 
-    function decodeText() {
-      let encoded = document.getElementById('inputText').value;
+    document.getElementById('outputText').value = output;
+  }
 
-      const allSymbols = [
-        { list: spaceSymbols, tag: " SPACE " },
-        { list: commaSymbols, tag: " COMMA " },
-        { list: periodSymbols, tag: " PERIOD " },
-        { list: questionSymbols, tag: " QUESTION " }
-      ];
+  function decodeText() {
+    const input = document.getElementById('inputText').value;
+    const key = document.getElementById('secretKey').value.trim();
+    if (!key) return alert("Please enter your secret key.");
 
-      // Replace all symbol variants with internal tags
-      for (const entry of allSymbols) {
-        for (const sym of entry.list) {
-          const escaped = sym.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); // escape special chars
-          encoded = encoded.replace(new RegExp(escaped, 'g'), entry.tag);
-        }
+    const shift = hashKey(key) % 26;
+    let temp = input;
+    const symbolMap = [
+      [spaceSymbols, "[space]"],
+      [commaSymbols, "[comma]"],
+      [periodSymbols, "[period]"],
+      [questionSymbols, "[question]"]
+    ];
+
+    for (const [symbols, token] of symbolMap) {
+      for (const s of symbols) {
+        temp = temp.split(s).join(` ${token} `);
       }
-
-      const words = encoded.trim().split(/\s+/);
-      let decoded = '';
-
-      for (let word of words) {
-        if (word === 'SPACE') {
-          decoded += ' ';
-        } else if (word === 'COMMA') {
-          decoded += ',';
-        } else if (word === 'PERIOD') {
-          decoded += '.';
-        } else if (word === 'QUESTION') {
-          decoded += '?';
-        } else {
-          let letters = '';
-          for (let i = 0; i < word.length; i += 3) {
-            letters += word[i];
-          }
-          let shifted = '';
-          for (let ch of letters) {
-            shifted += shiftBackward(ch);
-          }
-          decoded += shifted.split('').reverse().join('').toLowerCase();
-        }
-      }
-
-      document.getElementById('outputText').value = decoded;
     }
-  </script>
 
-</body>
+    let words = temp.trim().split(/\s+/);
+    let output = '';
+
+    for (let w of words) {
+      if (w === '[space]') output += ' ';
+      else if (w === '[comma]') output += ',';
+      else if (w === '[period]') output += '.';
+      else if (w === '[question]') output += '?';
+      else {
+        let chars = '';
+        for (let i = 0; i < w.length; i += 3) chars += w[i];
+        let decoded = chars.split('').map(ch => unshiftChar(ch, shift)).reverse().join('').toLowerCase();
+        output += decoded;
+      }
+    }
+
+    document.getElementById('outputText').value = output;
+  }
+</script></body>
 </html>
